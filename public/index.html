@@ -62,9 +62,29 @@
       color: #7f8c8d;
       font-size: 0.9em;
     }
+    .banner {
+      background-color: #2ecc71;
+      color: white;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .banner a {
+      color: white;
+      font-weight: bold;
+      text-decoration: underline;
+    }
+    .banner a:hover {
+      color: #f8f9fa;
+    }
   </style>
 </head>
 <body>
+  <div class="banner">
+    <p>📊 <strong>NOUVEAU !</strong> Visualisez les appels Claude en temps réel avec notre <a href="/console.html">console de logs</a> !</p>
+  </div>
+
   <h1>VibeServer</h1>
   <p>VibeServer est un serveur backend qui fournit une API pour la manipulation de fichiers et projets, conçu pour être utilisé avec <a href="https://github.com/DaMolks/VibePMCP" target="_blank">VibePMCP</a> et <a href="https://claude.ai/desktop" target="_blank">Claude Desktop</a>.</p>
   
@@ -125,9 +145,24 @@
     <span class="method get">GET</span> <code>/api/mcp/context</code>
     <p>Récupère le contexte MCP actuel</p>
   </div>
+
+  <h3>Logs en temps réel</h3>
+  <div class="endpoint">
+    <span class="method get">GET</span> <code>/api/logs/stream</code>
+    <p>Stream SSE pour les logs en temps réel</p>
+  </div>
+
+  <div class="endpoint">
+    <span class="method post">POST</span> <code>/api/logs/add</code>
+    <p>Ajoute manuellement une entrée de log</p>
+  </div>
   
   <h2>Documentation</h2>
   <p>Pour une documentation complète de l'API, consultez le <a href="https://github.com/DaMolks/VibeServer" target="_blank">dépôt GitHub</a>.</p>
+
+  <h2>Outils et Visualisation</h2>
+  <p><a href="/console.html" class="method post" style="text-decoration: none; padding: 10px 20px; border-radius: 5px; background-color: #3498db; color: white; display: inline-block;">Accéder à la console de logs</a></p>
+  <p>La console de logs vous permet de visualiser en temps réel les appels effectués par Claude et les réponses du serveur.</p>
   
   <footer>
     <p>VibeServer v0.1.0 | Développé par DaMolks</p>
