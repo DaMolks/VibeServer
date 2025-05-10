@@ -9,6 +9,13 @@ const MAX_HISTORY_SIZE = 100;
 
 // Fonction pour envoyer un message à tous les clients SSE
 function sendToAllClients(data) {
+  // Ajouter un timestamp s'il n'y en a pas
+  if (!data.timestamp) {
+    data.timestamp = new Date().toISOString();
+  }
+  
+  console.log('Envoi de log aux clients SSE:', data);
+  
   // Ajouter le message à l'historique
   messageHistory.push(data);
   if (messageHistory.length > MAX_HISTORY_SIZE) {
@@ -17,9 +24,16 @@ function sendToAllClients(data) {
 
   // Envoyer le message à tous les clients connectés
   clients.forEach(client => {
-    client.res.write(`data: ${JSON.stringify(data)}\n\n`);
+    try {
+      client.res.write(`data: ${JSON.stringify(data)}\n\n`);
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi au client:', error);
+    }
   });
 }
+
+// Exporter la fonction pour l'utiliser dans d'autres modules
+global.sendLogToClients = sendToAllClients;
 
 // Middleware pour enregistrer et diffuser les requêtes MCP
 const logMcpMiddleware = (req, res, next) => {
@@ -35,6 +49,7 @@ const logMcpMiddleware = (req, res, next) => {
       content: `MCP COMMAND: ${req.body.command || 'N/A'}`
     };
     
+    console.log('Requête MCP interceptée:', requestData);
     sendToAllClients(requestData);
 
     // Intercepter la réponse
@@ -43,9 +58,10 @@ const logMcpMiddleware = (req, res, next) => {
       const responseData = {
         type: 'response',
         timestamp: responseTime,
-        content: `RESULT: ${JSON.stringify(data)}`
+        content: `RESULT: ${JSON.stringify(data, null, 2)}`
       };
       
+      console.log('Réponse MCP interceptée:', responseData);
       sendToAllClients(responseData);
       
       // Appeler la méthode originale
@@ -58,11 +74,15 @@ const logMcpMiddleware = (req, res, next) => {
 
 // Endpoint SSE pour les logs en streaming
 router.get('/stream', (req, res) => {
+  console.log('Nouvelle connexion SSE établie');
+  
   // Configuration des en-têtes pour SSE
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
-  res.flushHeaders();
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*'
+  });
 
   // Envoyer l'historique des messages au nouveau client
   messageHistory.forEach(message => {
@@ -76,6 +96,7 @@ router.get('/stream', (req, res) => {
     res
   };
   clients.push(newClient);
+  console.log(`Client SSE ajouté, ID: ${clientId}, total clients: ${clients.length}`);
 
   // Envoyer un événement de connexion
   const connectionMessage = {
@@ -90,7 +111,7 @@ router.get('/stream', (req, res) => {
     const index = clients.findIndex(client => client.id === clientId);
     if (index !== -1) {
       clients.splice(index, 1);
-      console.log(`Client déconnecté: ${clientId}`);
+      console.log(`Client SSE déconnecté: ${clientId}, clients restants: ${clients.length}`);
     }
   });
 });
@@ -110,7 +131,7 @@ router.post('/add', (req, res) => {
   
   const message = {
     type,
-    timestamp: new Date(),
+    timestamp: new Date().toISOString(),
     content
   };
   
@@ -119,6 +140,21 @@ router.post('/add', (req, res) => {
   res.json({
     success: true,
     message: 'Log entry added'
+  });
+});
+
+// Route pour tester la fonctionnalité de logs
+router.get('/test', (req, res) => {
+  // Envoyer un message de test
+  sendToAllClients({
+    type: 'info',
+    content: 'Test message from server at ' + new Date().toLocaleTimeString()
+  });
+  
+  res.json({
+    success: true,
+    message: 'Test message sent to all connected clients',
+    connectedClients: clients.length
   });
 });
 
