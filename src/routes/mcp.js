@@ -15,14 +15,28 @@ let mcpContext = {
   history: []
 };
 
+// Fonction helper pour envoyer des logs à la console
+function logToConsole(type, content) {
+  console.log(`[MCP] ${type.toUpperCase()}: ${content}`);
+  
+  // Utiliser la fonction globale si elle existe
+  if (global.sendLogToClients) {
+    global.sendLogToClients({
+      type,
+      timestamp: new Date(),
+      content
+    });
+  }
+}
+
 // Exécute une commande MCP
 router.post('/execute', async (req, res, next) => {
   try {
     const { command } = req.body;
-    console.log(`POST /api/mcp/execute - Commande reçue: ${command}`);
+    logToConsole('info', `Commande reçue: ${command}`);
 
     if (!command) {
-      console.log('Erreur: commande manquante');
+      logToConsole('error', 'Commande manquante');
       return res.status(400).json({ 
         success: false,
         error: 'Command is required' 
@@ -38,7 +52,7 @@ router.post('/execute', async (req, res, next) => {
 
     // Analyser la commande
     const { cmd, args } = parseCommand(command);
-    console.log(`Commande analysée: cmd=${cmd}, args=${JSON.stringify(args)}`);
+    logToConsole('info', `Commande analysée: cmd=${cmd}, args=${JSON.stringify(args)}`);
     
     let result;
 
@@ -64,17 +78,24 @@ router.post('/execute', async (req, res, next) => {
         result = await handleGitCommit(args);
         break;
       default:
-        console.log(`Erreur: commande inconnue ${cmd}`);
+        logToConsole('error', `Commande inconnue: ${cmd}`);
         return res.status(400).json({ 
           success: false,
           error: `Unknown command: ${cmd}` 
         });
     }
 
-    console.log(`Résultat de la commande ${cmd}:`, result);
-    res.json({ success: true, command, result });
+    logToConsole('info', `Résultat de la commande ${cmd}: ${JSON.stringify(result)}`);
+    
+    // Envoyer la réponse formatée
+    const response = { success: true, command, result };
+    res.json(response);
+    
+    // Envoyer également le résultat à la console web
+    logToConsole('response', `Réponse pour ${cmd}: ${JSON.stringify(response)}`);
+    
   } catch (error) {
-    console.error(`Erreur lors de l'exécution de la commande MCP:`, error);
+    logToConsole('error', `Erreur lors de l'exécution de la commande MCP: ${error.message}`);
     res.status(500).json({ 
       success: false,
       error: `Error executing MCP command: ${error.message}` 
@@ -84,7 +105,7 @@ router.post('/execute', async (req, res, next) => {
 
 // Récupère le contexte MCP actuel
 router.get('/context', (req, res) => {
-  console.log('GET /api/mcp/context - Récupération du contexte MCP');
+  logToConsole('info', 'Récupération du contexte MCP');
   res.json({ context: mcpContext });
 });
 
@@ -98,7 +119,7 @@ function parseCommand(command) {
 
 // Handler pour create-project
 async function handleCreateProject(args) {
-  console.log(`Exécution de create-project avec args:`, args);
+  logToConsole('info', `Exécution de create-project avec args: ${JSON.stringify(args)}`);
   
   if (args.length < 1) {
     throw new Error('Project name is required');
@@ -112,12 +133,13 @@ async function handleCreateProject(args) {
   // Vérifier si le projet existe déjà
   try {
     await fs.access(projectPath);
+    logToConsole('error', `Le projet ${name} existe déjà`);
     throw new Error('Project already exists');
   } catch (error) {
     // Si l'erreur est différente de "le projet existe", la propager
     if (error.message !== 'Project already exists') {
       // Projet n'existe pas, c'est ce qu'on veut
-      console.log(`Le projet ${name} n'existe pas, on va le créer`);
+      logToConsole('info', `Le projet ${name} n'existe pas, création en cours...`);
       
       // Créer le dossier du projet
       await fs.mkdir(projectPath, { recursive: true });
@@ -142,21 +164,20 @@ async function handleCreateProject(args) {
       // Mettre à jour le contexte
       mcpContext.currentProject = name;
 
-      console.log(`Projet ${name} créé avec succès`);
+      logToConsole('info', `Projet ${name} créé avec succès`);
       return { 
         success: true, 
         message: `Project '${name}' created successfully`,
         project: { name, description, path: projectPath }
       };
     }
-    console.log(`Erreur: le projet ${name} existe déjà`);
     throw error;
   }
 }
 
 // Handler pour list-projects
 async function handleListProjects() {
-  console.log(`Exécution de list-projects`);
+  logToConsole('info', `Exécution de list-projects`);
   
   const items = await fs.readdir(PROJECTS_DIR, { withFileTypes: true });
   const projects = [];
@@ -188,13 +209,13 @@ async function handleListProjects() {
     }
   }
 
-  console.log(`${projects.length} projets trouvés`);
+  logToConsole('info', `${projects.length} projets trouvés`);
   return { projects };
 }
 
 // Handler pour switch-project
 async function handleSwitchProject(args) {
-  console.log(`Exécution de switch-project avec args:`, args);
+  logToConsole('info', `Exécution de switch-project avec args: ${JSON.stringify(args)}`);
   
   if (args.length < 1) {
     throw new Error('Project name is required');
@@ -207,14 +228,14 @@ async function handleSwitchProject(args) {
   try {
     await fs.access(projectPath);
   } catch (error) {
-    console.log(`Erreur: le projet ${projectName} n'existe pas`);
+    logToConsole('error', `Le projet ${projectName} n'existe pas`);
     throw new Error('Project not found');
   }
 
   // Mettre à jour le contexte
   mcpContext.currentProject = projectName;
 
-  console.log(`Projet actif changé pour ${projectName}`);
+  logToConsole('info', `Projet actif changé pour ${projectName}`);
   return { 
     success: true, 
     message: `Switched to project '${projectName}'`,
@@ -224,7 +245,7 @@ async function handleSwitchProject(args) {
 
 // Handler pour edit
 async function handleEditFile(args) {
-  console.log(`Exécution de edit avec args:`, args);
+  logToConsole('info', `Exécution de edit avec args: ${JSON.stringify(args)}`);
   
   if (!mcpContext.currentProject) {
     throw new Error('No active project. Use switch-project command first.');
@@ -256,7 +277,7 @@ async function handleEditFile(args) {
   try {
     await fs.access(fullPath);
   } catch (error) {
-    console.log(`Erreur: le fichier ${filePath} n'existe pas`);
+    logToConsole('error', `Le fichier ${filePath} n'existe pas`);
     throw new Error('File not found');
   }
 
@@ -272,7 +293,7 @@ async function handleEditFile(args) {
   // Extraire les lignes demandées
   const selectedLines = lines.slice(startLine, endLine + 1).join('\n');
 
-  console.log(`Édition des lignes ${startLine+1}-${endLine+1} du fichier ${filePath}`);
+  logToConsole('info', `Édition des lignes ${startLine+1}-${endLine+1} du fichier ${filePath}`);
   return {
     success: true,
     filePath,
@@ -285,7 +306,7 @@ async function handleEditFile(args) {
 
 // Handler pour exec
 async function handleExecCommand(args) {
-  console.log(`Exécution de exec avec args:`, args);
+  logToConsole('info', `Exécution de exec avec args: ${JSON.stringify(args)}`);
   
   if (args.length < 1) {
     throw new Error('Command is required');
@@ -294,7 +315,7 @@ async function handleExecCommand(args) {
   const command = args.join(' ');
 
   try {
-    console.log(`Exécution de la commande shell: ${command}`);
+    logToConsole('info', `Exécution de la commande shell: ${command}`);
     const { stdout, stderr } = await execPromise(command);
     return {
       success: true,
@@ -303,14 +324,14 @@ async function handleExecCommand(args) {
       stderr
     };
   } catch (error) {
-    console.log(`Erreur lors de l'exécution de la commande: ${error.message}`);
+    logToConsole('error', `Erreur lors de l'exécution de la commande: ${error.message}`);
     throw new Error(`Command failed: ${error.message}`);
   }
 }
 
 // Handler pour git-commit
 async function handleGitCommit(args) {
-  console.log(`Exécution de git-commit avec args:`, args);
+  logToConsole('info', `Exécution de git-commit avec args: ${JSON.stringify(args)}`);
   
   if (!mcpContext.currentProject) {
     throw new Error('No active project. Use switch-project command first.');
@@ -329,16 +350,16 @@ async function handleGitCommit(args) {
       await fs.access(path.join(projectPath, '.git'));
     } catch (error) {
       // Initialiser git si pas déjà fait
-      console.log(`Initialisation de Git dans ${projectPath}`);
+      logToConsole('info', `Initialisation de Git dans ${projectPath}`);
       await execPromise(`cd "${projectPath}" && git init`);
     }
 
     // Ajouter tous les fichiers
-    console.log(`Ajout des fichiers avec git add`);
+    logToConsole('info', `Ajout des fichiers avec git add`);
     await execPromise(`cd "${projectPath}" && git add .`);
 
     // Committer avec le message
-    console.log(`Création du commit avec le message: ${message}`);
+    logToConsole('info', `Création du commit avec le message: ${message}`);
     const { stdout, stderr } = await execPromise(`cd "${projectPath}" && git commit -m "${message}"`);
 
     return {
@@ -349,13 +370,13 @@ async function handleGitCommit(args) {
     };
   } catch (error) {
     if (error.stderr && error.stderr.includes('nothing to commit')) {
-      console.log(`Aucune modification à committer`);
+      logToConsole('info', `Aucune modification à committer`);
       return {
         success: true,
         message: 'No changes to commit'
       };
     }
-    console.log(`Erreur Git: ${error.message}`);
+    logToConsole('error', `Erreur Git: ${error.message}`);
     throw new Error(`Git commit failed: ${error.message}`);
   }
 }
