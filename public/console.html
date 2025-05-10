@@ -68,6 +68,12 @@
     button.clear:hover {
       background-color: #c0392b;
     }
+    button.test {
+      background-color: #2ecc71;
+    }
+    button.test:hover {
+      background-color: #27ae60;
+    }
     .console-container {
       flex-grow: 1;
       display: flex;
@@ -124,6 +130,39 @@
       font-size: 0.9em;
       color: #7f8c8d;
     }
+    .banner {
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      font-size: 0.9em;
+      display: none;
+    }
+    .banner.success {
+      background-color: #d4edda;
+      border-color: #c3e6cb;
+      color: #155724;
+    }
+    .test-controls {
+      background-color: #f1f9f5;
+      border: 1px solid #d3eadc;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+    }
+    .test-input {
+      display: flex;
+      margin-bottom: 10px;
+    }
+    .test-input input[type="text"] {
+      flex-grow: 1;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-right: 10px;
+    }
   </style>
 </head>
 <body>
@@ -133,6 +172,18 @@
       <div class="status-indicator status-disconnected" id="connectionStatus"></div>
       <span id="connectionText">Non connecté</span>
     </div>
+  </div>
+
+  <div id="banner" class="banner">Une erreur est survenue. Veuillez vérifier la console du navigateur.</div>
+
+  <div class="test-controls">
+    <h3>Tester la connexion et les logs</h3>
+    <p>Envoyez un message de test aux clients connectés pour vérifier que le système de logs en temps réel fonctionne correctement.</p>
+    <div class="test-input">
+      <input type="text" id="testCommand" placeholder="Commande MCP de test (par ex: create-project test-123 Description du projet)">
+      <button class="test" id="sendTestCommand">Envoyer commande</button>
+    </div>
+    <button class="test" id="testLogBtn">Envoyer un message de test simple</button>
   </div>
 
   <div class="controls">
@@ -172,6 +223,10 @@
       const connectionText = document.getElementById('connectionText');
       const entryCount = document.getElementById('entryCount');
       const searchInput = document.getElementById('searchInput');
+      const testLogBtn = document.getElementById('testLogBtn');
+      const banner = document.getElementById('banner');
+      const testCommand = document.getElementById('testCommand');
+      const sendTestCommand = document.getElementById('sendTestCommand');
       
       const filterRequests = document.getElementById('filterRequests');
       const filterResponses = document.getElementById('filterResponses');
@@ -195,6 +250,21 @@
         } catch (e) {
           return json;
         }
+      }
+      
+      function showBanner(message, isSuccess = false) {
+        banner.textContent = message;
+        banner.style.display = 'block';
+        
+        if (isSuccess) {
+          banner.classList.add('success');
+        } else {
+          banner.classList.remove('success');
+        }
+        
+        setTimeout(() => {
+          banner.style.display = 'none';
+        }, 5000);
       }
       
       function addLogEntry(entry) {
@@ -292,40 +362,109 @@
           eventSource.close();
         }
         
-        eventSource = new EventSource('/api/logs/stream');
-        
-        eventSource.onopen = function() {
-          connectionStatus.classList.remove('status-disconnected');
-          connectionStatus.classList.add('status-connected');
-          connectionText.textContent = 'Connecté';
-          connectBtn.textContent = 'Reconnecter';
+        try {
+          eventSource = new EventSource('/api/logs/stream');
           
-          addLogEntry({
-            type: 'info',
-            timestamp: new Date(),
-            content: 'Connexion établie avec le serveur'
-          });
-        };
-        
-        eventSource.onmessage = function(event) {
-          const data = JSON.parse(event.data);
-          addLogEntry(data);
-        };
-        
-        eventSource.onerror = function() {
-          connectionStatus.classList.remove('status-connected');
-          connectionStatus.classList.add('status-disconnected');
-          connectionText.textContent = 'Déconnecté';
+          eventSource.onopen = function() {
+            connectionStatus.classList.remove('status-disconnected');
+            connectionStatus.classList.add('status-connected');
+            connectionText.textContent = 'Connecté';
+            connectBtn.textContent = 'Reconnecter';
+            
+            addLogEntry({
+              type: 'info',
+              timestamp: new Date(),
+              content: 'Connexion établie avec le serveur'
+            });
+            
+            showBanner('Connexion établie avec succès !', true);
+          };
           
-          addLogEntry({
-            type: 'error',
-            timestamp: new Date(),
-            content: 'Connexion perdue avec le serveur'
-          });
+          eventSource.onmessage = function(event) {
+            try {
+              const data = JSON.parse(event.data);
+              addLogEntry(data);
+            } catch (error) {
+              console.error('Erreur de parsing JSON:', error, event.data);
+              addLogEntry({
+                type: 'error',
+                timestamp: new Date(),
+                content: `Erreur de parsing: ${event.data}`
+              });
+            }
+          };
           
-          eventSource.close();
-          eventSource = null;
-        };
+          eventSource.onerror = function(error) {
+            console.error('Erreur EventSource:', error);
+            connectionStatus.classList.remove('status-connected');
+            connectionStatus.classList.add('status-disconnected');
+            connectionText.textContent = 'Déconnecté';
+            
+            addLogEntry({
+              type: 'error',
+              timestamp: new Date(),
+              content: 'Connexion perdue avec le serveur'
+            });
+            
+            showBanner('Connexion perdue avec le serveur. Tentative de reconnexion...');
+            
+            eventSource.close();
+            eventSource = null;
+            
+            // Tentative de reconnexion après 5 secondes
+            setTimeout(connect, 5000);
+          };
+        } catch (error) {
+          console.error('Erreur lors de la création de EventSource:', error);
+          showBanner('Erreur lors de la connexion au serveur');
+        }
+      }
+      
+      function sendTestLog() {
+        fetch('/api/logs/test', {
+          method: 'GET',
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showBanner('Message de test envoyé avec succès !', true);
+          } else {
+            showBanner('Erreur lors de l\'envoi du message de test');
+          }
+        })
+        .catch(error => {
+          console.error('Erreur lors de l\'envoi du message de test:', error);
+          showBanner('Erreur lors de l\'envoi du message de test');
+        });
+      }
+      
+      function sendMcpCommand() {
+        const command = testCommand.value.trim();
+        
+        if (!command) {
+          showBanner('Veuillez entrer une commande MCP valide');
+          return;
+        }
+        
+        fetch('/api/mcp/execute', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ command })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showBanner('Commande MCP envoyée avec succès !', true);
+          } else {
+            showBanner(`Erreur: ${data.error || 'Erreur inconnue'}`);
+          }
+        })
+        .catch(error => {
+          console.error('Erreur lors de l\'envoi de la commande MCP:', error);
+          showBanner('Erreur lors de l\'envoi de la commande MCP');
+        });
       }
       
       // Event listeners
@@ -344,6 +483,16 @@
       filterResponses.addEventListener('change', applyFilters);
       filterInfo.addEventListener('change', applyFilters);
       filterErrors.addEventListener('change', applyFilters);
+      
+      testLogBtn.addEventListener('click', sendTestLog);
+      
+      sendTestCommand.addEventListener('click', sendMcpCommand);
+      
+      testCommand.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          sendMcpCommand();
+        }
+      });
       
       // Connexion automatique au chargement
       connect();
