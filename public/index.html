@@ -1,193 +1,179 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VibeServer - API pour le développement avec Claude</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    h1 {
-      color: #2c3e50;
-      border-bottom: 2px solid #3498db;
-      padding-bottom: 10px;
-    }
-    h2 {
-      color: #2980b9;
-      margin-top: 30px;
-    }
-    code {
-      background-color: #f8f8f8;
-      padding: 2px 5px;
-      border-radius: 3px;
-      font-family: 'Courier New', Courier, monospace;
-    }
-    pre {
-      background-color: #f8f8f8;
-      padding: 15px;
-      border-radius: 5px;
-      overflow-x: auto;
-    }
-    a {
-      color: #3498db;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    .endpoint {
-      background-color: #e8f4fc;
-      padding: 10px;
-      border-left: 4px solid #3498db;
-      margin-bottom: 15px;
-    }
-    .method {
-      font-weight: bold;
-      margin-right: 10px;
-    }
-    .get { color: #27ae60; }
-    .post { color: #e67e22; }
-    .patch { color: #9b59b6; }
-    .delete { color: #e74c3c; }
-    footer {
-      margin-top: 50px;
-      padding-top: 20px;
-      border-top: 1px solid #eee;
-      color: #7f8c8d;
-      font-size: 0.9em;
-    }
-    .banner {
-      background-color: #2ecc71;
-      color: white;
-      padding: 15px;
-      border-radius: 5px;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-    .banner a {
-      color: white;
-      font-weight: bold;
-      text-decoration: underline;
-    }
-    .banner a:hover {
-      color: #f8f9fa;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeServer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+        }
+        .hero {
+            margin-bottom: 3rem;
+        }
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: #0d6efd;
+        }
+        .hero p {
+            font-size: 1.25rem;
+            color: #6c757d;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        .card-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .card-text {
+            color: #6c757d;
+        }
+        .btn-primary {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+        }
+        .footer {
+            padding: 1.5rem 0;
+            background-color: #f1f3f5;
+            color: #6c757d;
+            text-align: center;
+        }
+        .logo {
+            max-width: 150px;
+            margin-bottom: 2rem;
+        }
+    </style>
 </head>
 <body>
-  <div class="banner">
-    <p>📊 <strong>NOUVEAU !</strong> Visualisez les appels Claude en temps réel avec notre <a href="/console.html">console de logs</a> !</p>
-  </div>
+    <div class="main-content">
+        <div class="hero">
+            <svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="45" fill="#0d6efd" opacity="0.1" />
+                <path d="M50 20 L50 80 M20 50 L80 50" stroke="#0d6efd" stroke-width="8" stroke-linecap="round" />
+                <circle cx="50" cy="50" r="10" fill="#0d6efd" />
+                <circle cx="50" cy="50" r="25" fill="none" stroke="#0d6efd" stroke-width="4" stroke-dasharray="5,5" />
+            </svg>
+            <h1>VibeServer</h1>
+            <p>Serveur local pour l'intégration avec Claude et d'autres modèles IA via le protocole MCP</p>
+        </div>
 
-  <h1>VibeServer</h1>
-  <p>VibeServer est un serveur backend qui fournit une API pour la manipulation de fichiers et projets, conçu pour être utilisé avec <a href="https://github.com/DaMolks/VibePMCP" target="_blank">VibePMCP</a> et <a href="https://claude.ai/desktop" target="_blank">Claude Desktop</a>.</p>
-  
-  <h2>Statut du Serveur</h2>
-  <p>Le serveur VibeServer est actuellement <span id="serverStatus">en cours de vérification...</span></p>
-  
-  <h2>Points d'accès API</h2>
-  
-  <h3>Projets</h3>
-  <div class="endpoint">
-    <span class="method get">GET</span> <code>/api/projects/list</code>
-    <p>Liste tous les projets disponibles</p>
-  </div>
-  
-  <div class="endpoint">
-    <span class="method post">POST</span> <code>/api/projects/create</code>
-    <p>Crée un nouveau projet</p>
-  </div>
-  
-  <div class="endpoint">
-    <span class="method delete">DELETE</span> <code>/api/projects/delete</code>
-    <p>Supprime un projet existant</p>
-  </div>
-  
-  <h3>Fichiers</h3>
-  <div class="endpoint">
-    <span class="method get">GET</span> <code>/api/files/list</code>
-    <p>Liste les fichiers d'un répertoire</p>
-  </div>
-  
-  <div class="endpoint">
-    <span class="method get">GET</span> <code>/api/files/read</code>
-    <p>Lit le contenu d'un fichier</p>
-  </div>
-  
-  <div class="endpoint">
-    <span class="method post">POST</span> <code>/api/files/write</code>
-    <p>Écrit dans un fichier</p>
-  </div>
-  
-  <div class="endpoint">
-    <span class="method patch">PATCH</span> <code>/api/files/edit-lines</code>
-    <p>Modifie des lignes spécifiques d'un fichier</p>
-  </div>
-  
-  <div class="endpoint">
-    <span class="method delete">DELETE</span> <code>/api/files/delete</code>
-    <p>Supprime un fichier</p>
-  </div>
-  
-  <h3>MCP (Model Context Protocol)</h3>
-  <div class="endpoint">
-    <span class="method post">POST</span> <code>/api/mcp/execute</code>
-    <p>Exécute une commande MCP</p>
-  </div>
-  
-  <div class="endpoint">
-    <span class="method get">GET</span> <code>/api/mcp/context</code>
-    <p>Récupère le contexte MCP actuel</p>
-  </div>
+        <div class="row justify-content-center" style="width: 100%; max-width: 1200px;">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Console Web</h5>
+                        <p class="card-text">Accédez à l'interface web pour gérer vos projets, exécuter des commandes MCP et suivre les logs en temps réel.</p>
+                        <a href="/console.html" class="btn btn-primary">Ouvrir la console</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">API REST</h5>
+                        <p class="card-text">Utilisez l'API REST pour intégrer VibeServer avec vos applications et outils de développement.</p>
+                        <a href="/api/status" class="btn btn-outline-primary">Vérifier l'état de l'API</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Intégration Claude</h5>
+                        <p class="card-text">Connectez Claude Desktop à votre serveur local via le protocole MCP pour une interaction fluide.</p>
+                        <a href="https://github.com/DaMolks/VibePMCP" target="_blank" class="btn btn-outline-primary">Documentation VibePMCP</a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-  <h3>Logs en temps réel</h3>
-  <div class="endpoint">
-    <span class="method get">GET</span> <code>/api/logs/stream</code>
-    <p>Stream SSE pour les logs en temps réel</p>
-  </div>
+        <div class="mt-5">
+            <div class="card" style="max-width: 800px;">
+                <div class="card-body">
+                    <h5 class="card-title">État du serveur</h5>
+                    <div id="serverStatus">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <div class="spinner-border text-primary me-2" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
+                            <span>Vérification de l'état du serveur...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-  <div class="endpoint">
-    <span class="method post">POST</span> <code>/api/logs/add</code>
-    <p>Ajoute manuellement une entrée de log</p>
-  </div>
-  
-  <h2>Documentation</h2>
-  <p>Pour une documentation complète de l'API, consultez le <a href="https://github.com/DaMolks/VibeServer" target="_blank">dépôt GitHub</a>.</p>
+    <footer class="footer">
+        <div class="container">
+            <p>VibeServer &copy; 2025 | <a href="https://github.com/DaMolks/VibeServer" target="_blank">GitHub</a></p>
+        </div>
+    </footer>
 
-  <h2>Outils et Visualisation</h2>
-  <p><a href="/console.html" class="method post" style="text-decoration: none; padding: 10px 20px; border-radius: 5px; background-color: #3498db; color: white; display: inline-block;">Accéder à la console de logs</a></p>
-  <p>La console de logs vous permet de visualiser en temps réel les appels effectués par Claude et les réponses du serveur.</p>
-  
-  <footer>
-    <p>VibeServer v0.1.0 | Développé par DaMolks</p>
-  </footer>
+    <script>
+        // Vérifier l'état du serveur au chargement de la page
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchServerStatus();
+        });
 
-  <script>
-    // Vérifier le statut du serveur
-    fetch('/api/status')
-      .then(response => response.json())
-      .then(data => {
-        const statusElement = document.getElementById('serverStatus');
-        if (data.status === 'ok') {
-          statusElement.textContent = 'en fonctionnement';
-          statusElement.style.color = '#27ae60';
-          statusElement.style.fontWeight = 'bold';
-        } else {
-          statusElement.textContent = 'rencontre des problèmes';
-          statusElement.style.color = '#e74c3c';
+        // Fonction pour récupérer l'état du serveur
+        function fetchServerStatus() {
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    const statusHtml = `
+                        <div class="d-flex flex-column align-items-center">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="badge bg-success me-2">En ligne</div>
+                                <span>Version ${data.version}</span>
+                            </div>
+                            <div class="d-flex flex-wrap justify-content-center gap-2">
+                                ${data.features.map(feature => `<span class="badge bg-primary">${feature}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('serverStatus').innerHTML = statusHtml;
+                })
+                .catch(error => {
+                    const errorHtml = `
+                        <div class="d-flex flex-column align-items-center">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="badge bg-danger me-2">Hors ligne</div>
+                                <span>Impossible de se connecter au serveur</span>
+                            </div>
+                            <div class="text-danger">Erreur: ${error.message}</div>
+                        </div>
+                    `;
+                    document.getElementById('serverStatus').innerHTML = errorHtml;
+                });
         }
-      })
-      .catch(error => {
-        const statusElement = document.getElementById('serverStatus');
-        statusElement.textContent = 'inaccessible';
-        statusElement.style.color = '#e74c3c';
-      });
-  </script>
+    </script>
 </body>
 </html>
