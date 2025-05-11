@@ -5,8 +5,10 @@
  * et l'autocomplétion dans les clients compatibles MCP.
  */
 
-// Définition des commandes MCP disponibles avec leurs schémas
-const mcpCommands = {
+const { gitCommands, getMergedCommands } = require('./git-commands-schema');
+
+// Définition des commandes MCP de base disponibles avec leurs schémas
+const baseMcpCommands = {
   // Commandes de gestion de projets
   'create-project': {
     description: 'Crée un nouveau projet',
@@ -316,32 +318,6 @@ const mcpCommands = {
     ]
   },
 
-  'git-commit': {
-    description: 'Crée un commit Git dans le projet actif',
-    parameters: [
-      {
-        name: 'message',
-        type: 'string',
-        description: 'Message de commit',
-        required: true
-      }
-    ],
-    returns: {
-      type: 'object',
-      description: 'Résultat du commit',
-      properties: {
-        success: { type: 'boolean', description: 'Succès de l\'opération' },
-        message: { type: 'string', description: 'Message de confirmation' },
-        details: { type: 'string', description: 'Détails du commit' },
-        errors: { type: 'string', description: 'Erreurs éventuelles' }
-      }
-    },
-    examples: [
-      'git-commit "Ajout de fonctionnalités"',
-      'git-commit "Correction du bug #123"'
-    ]
-  },
-
   'help': {
     description: 'Affiche la liste des commandes disponibles',
     parameters: [],
@@ -367,6 +343,9 @@ const mcpCommands = {
     examples: ['help']
   }
 };
+
+// Fusionner les commandes de base avec les commandes Git
+const mcpCommands = getMergedCommands(baseMcpCommands);
 
 // Fonctions utilitaires
 const getMcpCommandSchema = (commandName) => {
@@ -400,8 +379,11 @@ const getCommandHelp = (commandName) => {
   };
 };
 
+// Exporter toutes les fonctions et objets
 module.exports = {
   mcpCommands,
+  baseMcpCommands,
+  gitCommands,
   getMcpCommandSchema,
   getAllMcpCommandSchemas,
   getCommandHelp
