@@ -9,6 +9,7 @@ const path = require('path');
 const projectsRoutes = require('./routes/projects');
 const filesRoutes = require('./routes/files');
 const mcpRoutes = require('./routes/mcp');
+const mcpApiRoutes = require('./routes/mcp-api');
 const logsRoutes = require('./routes/logs');
 
 const app = express();
@@ -37,14 +38,15 @@ app.use('/api/mcp', logsRoutes.logMcpMiddleware);
 app.use('/api/projects', projectsRoutes);
 app.use('/api/files', filesRoutes);
 app.use('/api/mcp', mcpRoutes);
+app.use('/api/mcp-api', mcpApiRoutes);
 app.use('/api/logs', logsRoutes);
 
 // Route de test
 app.get('/api/status', (req, res) => {
   res.json({
     status: 'ok',
-    version: '0.1.0',
-    features: ['file-management', 'project-management', 'mcp-commands', 'realtime-logs']
+    version: '1.0.0',
+    features: ['file-management', 'project-management', 'mcp-commands', 'realtime-logs', 'mcp-api']
   });
 });
 
@@ -77,6 +79,7 @@ app.use((err, req, res, next) => {
   app.listen(PORT, () => {
     console.log(`VibeServer running on port ${PORT}`);
     console.log(`API available at http://localhost:${PORT}/api`);
+    console.log(`MCP API available at http://localhost:${PORT}/api/mcp-api`);
     console.log(`Console available at http://localhost:${PORT}/console.html`);
   });
 })();
