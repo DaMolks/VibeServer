@@ -13,7 +13,7 @@ const { mcpCommands, getAllMcpCommandSchemas, getCommandHelp } = require('./mcp-
 const SERVER_INFO = {
   name: 'VibeServer',
   version: '1.0.0',
-  description: 'Serveur local pour l'intégration avec Claude et d'autres modèles IA via MCP',
+  description: 'Serveur local pour l\'intégration avec Claude et d\'autres modèles IA via MCP',
   protocolVersion: '1.0.0',
   capabilities: ['commands', 'files', 'projects', 'exec']
 };
