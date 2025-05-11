@@ -1,64 +1,20 @@
 # VibeServer
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
-![Node](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Node](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-VibeServer est un serveur backend qui fournit une API pour la manipulation de fichiers et projets, conçu pour être utilisé avec [VibePMCP](https://github.com/DaMolks/VibePMCP) et [Claude Desktop](https://claude.ai/desktop).
+VibeServer est un serveur de développement local conçu pour l'intégration avec Claude et d'autres modèles IA via le protocole MCP (Model Context Protocol). Il permet à Claude de manipuler des fichiers, gérer des projets et exécuter des commandes directement sur votre système local.
 
-## 🌟 Caractéristiques principales
+## 🌟 Fonctionnalités principales
 
-- **API REST complète** : API RESTful pour la gestion de fichiers et projets
-- **Édition partielle de fichiers** : Manipulation précise de sections spécifiques des fichiers
-- **Gestion de projets** : Organisation des fichiers par projets pour un meilleur contrôle
-- **Intégration Git** : Support des opérations Git basiques
-- **Exécution de commandes** : Possibilité d'exécuter des commandes shell sécurisées
+- **Gestion de projets** : Créez et organisez votre code en projets distincts
+- **Manipulation de fichiers** : Créez, lisez, modifiez et supprimez des fichiers
+- **Commandes MCP** : Interface de commandes simple pour l'interaction avec Claude
+- **Intégration Git** : Commit de vos modifications directement depuis Claude
+- **Console temps réel** : Suivez l'activité et les logs du serveur
 
-## 🚀 Pourquoi VibeServer ?
-
-VibeServer fournit un backend robuste pour la manipulation de fichiers et la gestion de projets, permettant à des assistants IA comme Claude d'interagir efficacement avec votre environnement de développement. Ce serveur peut fonctionner de façon indépendante, mais est optimisé pour être utilisé avec VibePMCP, qui agit comme un proxy vers Claude Desktop.
-
-## 💻 Architecture
-
-```
-┌───────────────┐      ┌───────────────┐      ┌───────────────┐
-│               │      │               │      │               │
-│ Claude Desktop│◄────►│   VibePMCP    │◄────►│  VibeServer   │
-│    (Client)   │ MCP  │    (Proxy)    │ HTTP │   (Backend)   │
-│               │      │               │      │               │
-└───────────────┘      └───────────────┘      └───────────────┘
-```
-
-VibeServer est la partie backend qui gère réellement les fichiers, projets et commandes sur votre système.
-
-## 📋 API Endpoints
-
-### Projets
-
-| Méthode | Endpoint                      | Description                                        |
-|---------|-------------------------------|----------------------------------------------------|
-| GET     | `/api/projects/list`          | Liste tous les projets disponibles                 |
-| POST    | `/api/projects/create`        | Crée un nouveau projet                             |
-| DELETE  | `/api/projects/delete`        | Supprime un projet existant                        |
-
-### Fichiers
-
-| Méthode | Endpoint                      | Description                                        |
-|---------|-------------------------------|----------------------------------------------------|
-| GET     | `/api/files/list`             | Liste les fichiers d'un répertoire                 |
-| GET     | `/api/files/read`             | Lit le contenu d'un fichier                        |
-| POST    | `/api/files/write`            | Écrit dans un fichier                              |
-| PATCH   | `/api/files/edit-lines`       | Modifie des lignes spécifiques d'un fichier        |
-| DELETE  | `/api/files/delete`           | Supprime un fichier                                |
-
-### MCP (Model Context Protocol)
-
-| Méthode | Endpoint                      | Description                                        |
-|---------|-------------------------------|----------------------------------------------------|
-| POST    | `/api/mcp/execute`            | Exécute une commande MCP                           |
-| GET     | `/api/mcp/context`            | Récupère le contexte MCP actuel                    |
-
-## 🔧 Installation
+## 🚀 Installation
 
 ```bash
 # Cloner le dépôt
@@ -68,127 +24,162 @@ cd VibeServer
 # Installer les dépendances
 npm install
 
-# Configurer les variables d'environnement
+# Configurer les variables d'environnement (optionnel)
 cp .env.example .env
-# Modifiez .env selon vos besoins
 
-# Démarrer le serveur
-npm run start
+# Lancer le serveur
+npm start
 ```
 
 ## ⚡ Démarrage rapide
 
-```bash
-# Démarrer le serveur en mode développement
-npm run dev
+Une fois le serveur démarré, vous pouvez accéder à :
+- **API REST** : http://localhost:3000/api
+- **Console Web** : http://localhost:3000/console.html
 
-# Démarrer le serveur en mode production
-npm run start
+Pour utiliser VibeServer avec Claude via VibePMCP, suivez les instructions dans la documentation de [VibePMCP](https://github.com/DaMolks/VibePMCP).
+
+## 📋 Commandes MCP disponibles
+
+VibeServer prend en charge les commandes MCP suivantes :
+
+| Commande | Description | Exemple |
+|----------|-------------|---------|
+| `help` | Affiche l'aide sur les commandes disponibles | `help` |
+| `create-project` | Crée un nouveau projet | `create-project mon-app "Description du projet"` |
+| `list-projects` | Liste tous les projets disponibles | `list-projects` |
+| `switch-project` | Change le projet actif | `switch-project mon-app` |
+| `create-file` | Crée un nouveau fichier | `create-file index.js "console.log('Hello world');"` |
+| `list-files` | Liste les fichiers d'un répertoire | `list-files src` |
+| `read-file` | Lit le contenu d'un fichier | `read-file package.json` |
+| `update-file` | Met à jour le contenu d'un fichier | `update-file README.md "# Mon Projet"` |
+| `delete-file` | Supprime un fichier ou répertoire | `delete-file temp.txt` |
+| `edit` | Édite des lignes spécifiques d'un fichier | `edit main.js 10-15 "// Nouveau code"` |
+| `exec` | Exécute une commande shell | `exec npm install express` |
+| `git-commit` | Commit les changements avec Git | `git-commit "Ajout de fonctionnalités"` |
+
+## 🔌 API REST
+
+VibeServer expose plusieurs endpoints REST pour interagir avec le système de fichiers et les projets :
+
+| Endpoint | Méthode | Description |
+|----------|---------|-------------|
+| `/api/status` | GET | Vérifier l'état du serveur |
+| `/api/projects/list` | GET | Lister tous les projets |
+| `/api/projects/create` | POST | Créer un nouveau projet |
+| `/api/projects/get` | GET | Obtenir les détails d'un projet |
+| `/api/files/list` | GET | Lister les fichiers d'un projet |
+| `/api/files/read` | GET | Lire le contenu d'un fichier |
+| `/api/files/write` | POST | Écrire un nouveau fichier |
+| `/api/files/edit-lines` | PATCH | Éditer des lignes spécifiques |
+| `/api/files/delete` | DELETE | Supprimer un fichier |
+| `/api/mcp/execute` | POST | Exécuter une commande MCP |
+| `/api/mcp/context` | GET | Obtenir le contexte MCP courant |
+| `/api/logs` | GET | Récupérer les logs récents |
+
+## 🔧 Configuration
+
+Le serveur peut être configuré via le fichier `.env` ou des variables d'environnement :
+
+```
+# Port d'écoute du serveur (défaut: 3000)
+PORT=3000
+
+# Niveau de log (debug, info, warn, error)
+LOG_LEVEL=info
+
+# Répertoire des projets (chemin absolu ou relatif)
+PROJECTS_DIR=./projects
+
+# Répertoire des logs (défaut: ./logs)
+LOGS_DIR=./logs
 ```
 
-## 📊 Exemple d'utilisation
-
-### Créer un projet
-
-```bash
-curl -X POST http://localhost:3000/api/projects/create \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "mon-projet",
-    "description": "Description de mon projet"
-  }'
-```
-
-### Lire un fichier
-
-```bash
-curl -X GET "http://localhost:3000/api/files/read?project=mon-projet&path=README.md"
-```
-
-### Modifier des lignes spécifiques
-
-```bash
-curl -X PATCH http://localhost:3000/api/files/edit-lines \
-  -H "Content-Type: application/json" \
-  -d '{
-    "project": "mon-projet",
-    "path": "src/app.js",
-    "startLine": 10,
-    "endLine": 15,
-    "newContent": "// Nouveau code\nfunction hello() {\n  return \"world\";\n}"
-  }'
-```
-
-### Exécuter une commande MCP
-
-```bash
-curl -X POST http://localhost:3000/api/mcp/execute \
-  -H "Content-Type: application/json" \
-  -d '{
-    "command": "list-projects"
-  }'
-```
-
-## 🏗️ Structure du projet
+## 📁 Structure du projet
 
 ```
 VibeServer/
-├── src/                 # Code source
-│   ├── routes/          # Routes de l'API
-│   │   ├── projects.js  # Routes pour les projets
-│   │   ├── files.js     # Routes pour les fichiers
-│   │   └── mcp.js       # Routes pour le protocole MCP
-│   ├── server.js        # Configuration du serveur Express
-│   ├── database.js      # Gestion de la base de données pour l'historique
-│   └── utils/           # Utilitaires divers
-├── projects/            # Dossier où sont stockés les projets
-├── database.db          # Base de données SQLite pour l'historique
-├── public/              # Contenu statique
-│   └── index.html       # Page d'accueil simple
-└── tests/               # Tests automatisés
+├── projects/              # Répertoire contenant les projets
+├── public/                # Fichiers statiques (console web)
+│   ├── console.html       # Interface de console
+│   ├── css/               # Feuilles de style
+│   └── js/                # Scripts client
+├── src/                   # Code source du serveur
+│   ├── routes/            # Définition des routes API
+│   │   ├── files.js       # Routes pour la gestion des fichiers
+│   │   ├── logs.js        # Routes pour la gestion des logs
+│   │   ├── mcp.js         # Routes pour les commandes MCP
+│   │   └── projects.js    # Routes pour la gestion des projets
+│   └── server.js          # Point d'entrée principal
+├── .env.example           # Exemple de configuration
+├── package.json           # Dépendances et scripts
+└── README.md              # Documentation
 ```
 
-## 🔌 Intégration avec VibePMCP et Claude Desktop
+## 🔒 Sécurité
 
-VibeServer est conçu pour fonctionner avec [VibePMCP](https://github.com/DaMolks/VibePMCP), qui fait le pont entre Claude Desktop et ce serveur. Pour une intégration complète :
+Veuillez noter que VibeServer est conçu pour être utilisé dans un environnement de développement local et **n'est pas sécurisé pour une exposition sur Internet**. Il offre un accès complet au système de fichiers dans le répertoire des projets et peut exécuter des commandes arbitraires.
 
-1. Installez et configurez VibeServer
-2. Installez et configurez VibePMCP en pointant vers votre instance VibeServer
-3. Configurez Claude Desktop pour utiliser VibePMCP
+Recommandations de sécurité :
+- Exécutez le serveur uniquement sur votre machine locale (`localhost`)
+- Ne pas exposer le serveur sur Internet
+- Limiter l'accès aux répertoires de projets spécifiques
+- Examiner les commandes exécutées via la console
 
-Consultez la [documentation d'intégration](./docs/INTEGRATION.md) pour des instructions détaillées.
+## 🔄 Intégration avec Claude
 
-## 🛡️ Sécurité
+Pour intégrer VibeServer avec Claude, utilisez le proxy [VibePMCP](https://github.com/DaMolks/VibePMCP) qui implémente le protocole MCP (Model Context Protocol) et permet à Claude Desktop de communiquer avec VibeServer.
 
-VibeServer exécute des commandes shell et manipule des fichiers, ce qui présente des risques de sécurité potentiels. Par défaut, le serveur :
+1. Installer et configurer [VibePMCP](https://github.com/DaMolks/VibePMCP)
+2. Configurer Claude Desktop pour utiliser VibePMCP
+3. Utiliser les commandes MCP directement dans les conversations avec Claude
 
-- Limite les chemins de fichiers accessibles
-- Restreint les commandes shell autorisées
-- N'expose pas de fonctionnalités sensibles sans authentification
+Exemple d'interaction avec Claude :
 
-Pour des déploiements en production, nous recommandons vivement de :
-- Activer l'authentification API
-- Limiter l'accès réseau au serveur
-- Exécuter le serveur avec des privilèges minimaux
+```
+User: Crée un projet "hello-world" avec une application Express simple
 
-## 🧩 Extensibilité
+Claude: Je vais créer un projet Express simple pour vous. Laissez-moi configurer cela:
 
-VibeServer est conçu pour être extensible :
+```mcp create-project hello-world "Application Express simple"```
+```mcp switch-project hello-world```
+```mcp create-file package.json { "name": "hello-world", "version": "1.0.0", "dependencies": { "express": "^4.18.2" } }```
+```mcp create-file app.js const express = require('express'); const app = express(); const port = 3001; app.get('/', (req, res) => { res.send('Hello, World!'); }); app.listen(port, () => { console.log(`Serveur démarré sur http://localhost:${port}`); });```
+```mcp exec npm install```
+```mcp exec node app.js```
+```
 
-- Système de plugins pour ajouter de nouvelles fonctionnalités
-- API bien documentée pour l'intégration avec d'autres services
-- Architecture modulaire facilitant les modifications
+Votre projet a été créé et le serveur Express est en cours d'exécution sur http://localhost:3001!
+```
 
-Pour créer des extensions, consultez le [guide d'extensibilité](./docs/EXTENDING.md).
+## 🛠️ Développement
+
+Pour contribuer au développement de VibeServer :
+
+```bash
+# Cloner le dépôt
+git clone https://github.com/DaMolks/VibeServer.git
+cd VibeServer
+
+# Installer les dépendances de développement
+npm install
+
+# Lancer le serveur en mode développement (avec rechargement automatique)
+npm run dev
+```
+
+## 📚 Documentation technique
+
+Consultez les fichiers sources commentés pour plus de détails sur l'implémentation technique.
 
 ## 📄 Licence
 
-Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
 
-## 🤝 Contribution
+## 🤝 Contribuer
 
-Les contributions sont les bienvenues ! Consultez [CONTRIBUTING.md](./CONTRIBUTING.md) pour les directives.
+Les contributions sont les bienvenues ! N'hésitez pas à ouvrir des issues ou des pull requests.
 
 ---
 
-Développé avec ❤️ pour faciliter l'interaction entre les assistants IA et les environnements de développement.
+Développé avec ❤️ pour faciliter l'interaction entre Claude et votre environnement de développement.
