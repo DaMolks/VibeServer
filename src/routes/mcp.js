@@ -71,6 +71,9 @@ router.post('/execute', async (req, res, next) => {
       case 'edit':
         result = await handleEditFile(args);
         break;
+      case 'create-file':
+        result = await handleCreateFile(args);
+        break;
       case 'exec':
         result = await handleExecCommand(args);
         break;
@@ -241,6 +244,53 @@ async function handleSwitchProject(args) {
     message: `Switched to project '${projectName}'`,
     currentProject: projectName
   };
+}
+
+// Handler pour create-file
+async function handleCreateFile(args) {
+  logToConsole('info', `Exécution de create-file avec args: ${JSON.stringify(args)}`);
+  
+  if (!mcpContext.currentProject) {
+    throw new Error('No active project. Use switch-project command first.');
+  }
+
+  if (args.length < 1) {
+    throw new Error('File path is required');
+  }
+
+  // Le premier argument est le chemin du fichier
+  const filePath = args[0];
+  
+  // Le reste des arguments est considéré comme le contenu initial du fichier
+  const initialContent = args.slice(1).join(' ') || '';
+
+  // Construire le chemin complet
+  const fullPath = path.join(PROJECTS_DIR, mcpContext.currentProject, filePath);
+  
+  // Vérifier si le fichier existe déjà
+  try {
+    await fs.access(fullPath);
+    logToConsole('error', `Le fichier ${filePath} existe déjà`);
+    throw new Error('File already exists');
+  } catch (error) {
+    // Si l'erreur est différente de "file exists", la propager
+    if (error.message !== 'File already exists') {
+      // Créer le dossier parent si nécessaire
+      const dirPath = path.dirname(fullPath);
+      await fs.mkdir(dirPath, { recursive: true });
+      
+      // Écrire le contenu initial dans le fichier
+      await fs.writeFile(fullPath, initialContent, 'utf8');
+      
+      logToConsole('info', `Fichier ${filePath} créé avec succès`);
+      return {
+        success: true,
+        message: `File '${filePath}' created successfully`,
+        path: filePath
+      };
+    }
+    throw error;
+  }
 }
 
 // Handler pour edit
